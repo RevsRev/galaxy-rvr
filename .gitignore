@@ -1,0 +1,43 @@
+# Build directories
+/build/
+/build-*/
+out/
+bin/
+lib/
+
+# CMake cache files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+Testing/
+
+# CLion / JetBrains
+.idea/
+cmake-build-*/
+
+# VSCode
+.vscode/
+
+# Compiled object files and libs
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Logs and temp
+*.log
+*.tmp
+
+# OS junk
+.DS_Store
+Thumbs.db
