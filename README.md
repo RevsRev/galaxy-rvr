@@ -15,8 +15,5 @@ Install `gcc-avr`, `binutils-avr`, `avr-libc` and `avrdude`:
 In the project root:
 
 ```shell
-  mkdir build
-  cd build
-  cmake ..
-  cmake --build .
+   ./rv.sh
 ```
