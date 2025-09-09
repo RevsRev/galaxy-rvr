@@ -6,11 +6,15 @@
 int main (void) {
     /*Set to one the fifth bit of DDRB to one
     **Set digital pin 13 to output mode */
-    DDRB |= _BV(DDB5);
+    DDRB |= _BV(DDB4); // R
+    DDRB |= _BV(DDB5); // G
+    DDRB |= _BV(DDB3); // B
 
     while(1) {
         /*Set to one the fifth bit of PORTB to one
         **Set to HIGH the pin 13 */
+        PORTB |= _BV(PORTB3);
+        PORTB |= _BV(PORTB4);
         PORTB |= _BV(PORTB5);
 
         /*Wait 3000 ms */
@@ -18,6 +22,8 @@ int main (void) {
 
         /*Set to zero the fifth bit of PORTB
         **Set to LOW the pin 13 */
+        PORTB &= ~_BV(PORTB3);
+        PORTB &= ~_BV(PORTB4);
         PORTB &= ~_BV(PORTB5);
 
         /*Wait 3000 ms */
