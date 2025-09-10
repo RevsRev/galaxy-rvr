@@ -1,22 +1,60 @@
 #include <avr/io.h>
 #include <util/delay.h>
+#include <avr/interrupt.h>
 
 #define MS_DELAY 3000
+#define DUTY_BITS 4
+#define DUTY_MAX (1 << DUTY_BITS)
 
+uint8_t R = PORTB4;
+uint8_t G = PORTB5;
+uint8_t B = PORTB3;
 
-void software_pwm(uint8_t duty) {
-    for (uint8_t i = 0; i < 255; i++) {
-        if (i <= duty) {
-            PORTB |= _BV(PORTB4);
-            PORTB |= _BV(PORTB5);
-            PORTB |= _BV(PORTB3);
-        } else {
-            PORTB &= ~_BV(PORTB4);
-            PORTB &= ~_BV(PORTB5);
-            PORTB &= ~_BV(PORTB3);
-        }
-        // _delay_ms(1);
+static uint8_t r_duty = 0;
+static uint8_t g_duty = 0;
+static uint8_t b_duty = 0;
+
+static uint8_t r_counter = 0;
+static uint8_t g_counter = 0;
+static uint8_t b_counter = 0;
+
+static uint32_t global_counter = 0;
+
+void pwm(uint8_t *counter, uint8_t duty, uint8_t pin) {
+    if (*counter < duty) {
+        PORTB |= _BV(pin);
+    } else {
+        PORTB &= ~_BV(pin);
     }
+    *counter = (*counter + 1) % DUTY_MAX;
+}
+
+ISR(TIMER1_COMPA_vect) {
+
+    //Not smooth - go 0, 1, ... DUTY_MAX - 1, 0, 1 , ...
+    // r_duty = (global_counter / (3 * 5)) % DUTY_MAX;
+    // g_duty = (global_counter / (7 * 11)) % DUTY_MAX;
+    // b_duty = (global_counter / (13 * 17)) % DUTY_MAX;
+
+    //Smooth - go 0, 1, ... DUTY_MAX - 1, DUTY_MAX - 1, DUTY_NAX - 2, ..., 1, 0, 1, ...
+    r_duty = (global_counter >> (3 * (DUTY_BITS + 1))) % (2 * DUTY_MAX);
+    if (r_duty > DUTY_MAX) {
+        r_duty = 2 * DUTY_MAX - r_duty;
+    }
+    g_duty = (global_counter >> (2 * (DUTY_BITS + 1))) % (2 * DUTY_MAX);
+    if (g_duty > DUTY_MAX) {
+        g_duty = 2 * DUTY_MAX - g_duty;
+    }
+    b_duty = (global_counter >> (1 * (DUTY_BITS + 1))) % (2 * DUTY_MAX);
+    if (b_duty > DUTY_MAX) {
+        b_duty = 2 * DUTY_MAX - b_duty;
+    }
+
+    pwm(&r_counter, r_duty, R);
+    pwm(&g_counter, g_duty, G);
+    pwm(&b_counter, b_duty, B);
+
+    global_counter++;
 }
 
 int main (void) {
@@ -26,39 +64,13 @@ int main (void) {
     DDRB |= _BV(DDB5); // G
     DDRB |= _BV(DDB3); // B
 
-    uint16_t duty = 0;
+    TCCR1B |= (1 << WGM12);             // CTC
+    OCR1A = 62;                         // 16MHz/64/62 ≈ 4kHz interrupt
+    TIMSK1 |= (1 << OCIE1A);            // enable compare interrupt
+    TCCR1B |= (1 << CS11) | (1 << CS10);// prescaler 64
 
-    while(1) {
-        int eff_duty;
-        if (duty < 250) {
-            eff_duty = duty;
-        } else {
-            eff_duty = 500 - duty;
-        }
+    sei();
 
-        software_pwm(eff_duty);
-
-        duty++;
-        duty = duty % 500;
-
-        _delay_ms(10);
-
-        // /*Set to one the fifth bit of PORTB to one
-        // **Set to HIGH the pin 13 */
-        // PORTB |= _BV(PORTB3);
-        // PORTB |= _BV(PORTB4);
-        // PORTB |= _BV(PORTB5);
-        //
-        // /*Wait 3000 ms */
-        // _delay_ms(MS_DELAY);
-        //
-        // /*Set to zero the fifth bit of PORTB
-        // **Set to LOW the pin 13 */
-        // PORTB &= ~_BV(PORTB3);
-        // PORTB &= ~_BV(PORTB4);
-        // PORTB &= ~_BV(PORTB5);
-        //
-        // /*Wait 3000 ms */
-        // _delay_ms(MS_DELAY);
+    while(1) {;
     }
 }
