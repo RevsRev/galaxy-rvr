@@ -3,6 +3,22 @@
 
 #define MS_DELAY 3000
 
+
+void software_pwm(uint8_t duty) {
+    for (uint8_t i = 0; i < 255; i++) {
+        if (i <= duty) {
+            PORTB |= _BV(PORTB4);
+            PORTB |= _BV(PORTB5);
+            PORTB |= _BV(PORTB3);
+        } else {
+            PORTB &= ~_BV(PORTB4);
+            PORTB &= ~_BV(PORTB5);
+            PORTB &= ~_BV(PORTB3);
+        }
+        // _delay_ms(1);
+    }
+}
+
 int main (void) {
     /*Set to one the fifth bit of DDRB to one
     **Set digital pin 13 to output mode */
@@ -10,23 +26,39 @@ int main (void) {
     DDRB |= _BV(DDB5); // G
     DDRB |= _BV(DDB3); // B
 
+    uint16_t duty = 0;
+
     while(1) {
-        /*Set to one the fifth bit of PORTB to one
-        **Set to HIGH the pin 13 */
-        PORTB |= _BV(PORTB3);
-        PORTB |= _BV(PORTB4);
-        PORTB |= _BV(PORTB5);
+        int eff_duty;
+        if (duty < 250) {
+            eff_duty = duty;
+        } else {
+            eff_duty = 500 - duty;
+        }
 
-        /*Wait 3000 ms */
-        _delay_ms(MS_DELAY);
+        software_pwm(eff_duty);
 
-        /*Set to zero the fifth bit of PORTB
-        **Set to LOW the pin 13 */
-        PORTB &= ~_BV(PORTB3);
-        PORTB &= ~_BV(PORTB4);
-        PORTB &= ~_BV(PORTB5);
+        duty++;
+        duty = duty % 500;
 
-        /*Wait 3000 ms */
-        _delay_ms(MS_DELAY);
+        _delay_ms(10);
+
+        // /*Set to one the fifth bit of PORTB to one
+        // **Set to HIGH the pin 13 */
+        // PORTB |= _BV(PORTB3);
+        // PORTB |= _BV(PORTB4);
+        // PORTB |= _BV(PORTB5);
+        //
+        // /*Wait 3000 ms */
+        // _delay_ms(MS_DELAY);
+        //
+        // /*Set to zero the fifth bit of PORTB
+        // **Set to LOW the pin 13 */
+        // PORTB &= ~_BV(PORTB3);
+        // PORTB &= ~_BV(PORTB4);
+        // PORTB &= ~_BV(PORTB5);
+        //
+        // /*Wait 3000 ms */
+        // _delay_ms(MS_DELAY);
     }
 }
