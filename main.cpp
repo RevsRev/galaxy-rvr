@@ -31,11 +31,6 @@ void pwm(uint8_t *counter, uint8_t duty, uint8_t pin) {
 
 ISR(TIMER1_COMPA_vect) {
 
-    //Not smooth - go 0, 1, ... DUTY_MAX - 1, 0, 1 , ...
-    // r_duty = (global_counter / (3 * 5)) % DUTY_MAX;
-    // g_duty = (global_counter / (7 * 11)) % DUTY_MAX;
-    // b_duty = (global_counter / (13 * 17)) % DUTY_MAX;
-
     //Smooth - go 0, 1, ... DUTY_MAX - 1, DUTY_MAX - 1, DUTY_NAX - 2, ..., 1, 0, 1, ...
     r_duty = (global_counter >> (3 * (DUTY_BITS + 1))) % (2 * DUTY_MAX);
     if (r_duty > DUTY_MAX) {
