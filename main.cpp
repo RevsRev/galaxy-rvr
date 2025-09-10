@@ -3,6 +3,7 @@
 #include <avr/interrupt.h>
 
 #define MS_DELAY 3000
+#define FREQUENCY_OFFSET (3 * DUTY_BITS)
 #define DUTY_BITS 4
 #define DUTY_MAX (1 << DUTY_BITS)
 
@@ -18,7 +19,7 @@ static uint8_t r_counter = 0;
 static uint8_t g_counter = 0;
 static uint8_t b_counter = 0;
 
-static uint32_t global_counter = 0;
+static uint64_t global_counter = 0;
 
 void pwm(uint8_t *counter, uint8_t duty, uint8_t pin) {
     if (*counter < duty) {
@@ -32,15 +33,15 @@ void pwm(uint8_t *counter, uint8_t duty, uint8_t pin) {
 ISR(TIMER1_COMPA_vect) {
 
     //Smooth - go 0, 1, ... DUTY_MAX - 1, DUTY_MAX - 1, DUTY_NAX - 2, ..., 1, 0, 1, ...
-    r_duty = (global_counter >> (3 * (DUTY_BITS + 1))) % (2 * DUTY_MAX);
+    r_duty = (global_counter >> (FREQUENCY_OFFSET + 2 * (DUTY_BITS + 1))) % (2 * DUTY_MAX);
     if (r_duty > DUTY_MAX) {
         r_duty = 2 * DUTY_MAX - r_duty;
     }
-    g_duty = (global_counter >> (2 * (DUTY_BITS + 1))) % (2 * DUTY_MAX);
+    g_duty = (global_counter >> (FREQUENCY_OFFSET + 1 * (DUTY_BITS + 1))) % (2 * DUTY_MAX);
     if (g_duty > DUTY_MAX) {
         g_duty = 2 * DUTY_MAX - g_duty;
     }
-    b_duty = (global_counter >> (1 * (DUTY_BITS + 1))) % (2 * DUTY_MAX);
+    b_duty = (global_counter >> (FREQUENCY_OFFSET + 0 * (DUTY_BITS + 1))) % (2 * DUTY_MAX);
     if (b_duty > DUTY_MAX) {
         b_duty = 2 * DUTY_MAX - b_duty;
     }
